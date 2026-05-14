@@ -319,7 +319,18 @@ window.submitCard = async function() {
     document.getElementById('submitted-screen').style.display = 'flex';
     document.getElementById('submitted-card-display').textContent = CARD_NAMES[selectedCard];
     if (currentIdx < 5) {
+      // 다음 상황 버튼
       document.getElementById('next-btn').style.display = 'block';
+      document.getElementById('next-btn').textContent = '다음 상황 →';
+      document.getElementById('next-btn').onclick = goNext;
+    } else {
+      // 마지막 상황 → 바로 다짐 화면으로
+      document.getElementById('next-btn').style.display = 'block';
+      document.getElementById('next-btn').textContent = '🥄 용기 스푼에 다짐 적으러 가기';
+      document.getElementById('next-btn').onclick = function() {
+        document.getElementById('submitted-screen').style.display = 'none';
+        document.getElementById('pledge-screen').style.display = 'flex';
+      };
     }
   } catch (e) {
     btn.disabled = false;
