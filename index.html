@@ -150,6 +150,63 @@
   #end-screen p { font-size: 1.1rem; color: #aaa; text-align: center; }
   .spoon-icon { font-size: 4rem; }
 
+  /* 냄비 화면 */
+  #pot-screen {
+    display: none; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 30px 40px; gap: 16px; background: #0f0f1e;
+  }
+  #pot-screen h2 { font-size: 1.6rem; font-weight: 700; color: #fff; text-align: center; }
+  #pot-screen p { font-size: 1rem; color: #aaa; text-align: center; }
+  .pot-wrap {
+    position: relative; width: 420px; height: 360px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .pot-svg { width: 100%; height: 100%; }
+  .spoon-in-pot {
+    position: absolute; cursor: pointer;
+    transform-origin: center bottom;
+    animation: spoonBounce 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    transition: transform 0.2s;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+  }
+  .spoon-in-pot:hover { transform: scale(1.15) rotate(-5deg); }
+  @keyframes spoonBounce {
+    0%   { transform: translateY(-80px) rotate(-30deg) scale(0.5); opacity:0; }
+    60%  { transform: translateY(6px) rotate(3deg) scale(1.05); opacity:1; }
+    100% { transform: translateY(0) rotate(0deg) scale(1); opacity:1; }
+  }
+
+  /* 스푼 확대 모달 */
+  .spoon-modal-overlay {
+    display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.75); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .spoon-modal-overlay.show { display: flex; }
+  .spoon-modal {
+    background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+    border: 2px solid #534AB7; border-radius: 20px;
+    padding: 36px 40px; text-align: center; max-width: 420px; width: 90%;
+    animation: modalPop 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+    position: relative;
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.5) translateY(40px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .spoon-modal .modal-emoji { font-size: 3rem; margin-bottom: 12px; }
+  .spoon-modal .modal-name { font-size: 1rem; color: #aaa; margin-bottom: 8px; }
+  .spoon-modal .modal-pledge { font-size: 1.3rem; font-weight: 700; color: #fff; line-height: 1.6; margin-bottom: 20px; }
+  .spoon-modal .modal-close {
+    background: #534AB7; color: white; border: none;
+    border-radius: 10px; padding: 10px 28px; font-size: 0.95rem;
+    font-weight: 600; cursor: pointer;
+  }
+  .spoon-modal .modal-close:hover { background: #3C3489; }
+  .spoon-count { font-size: 0.9rem; color: #aaa; }
+  .spoon-count span { color: #FF8C42; font-weight: 700; font-size: 1.1rem; }
+
   @media (max-width: 768px) {
     .main-content { grid-template-columns: 1fr; }
   }
@@ -216,7 +273,67 @@
   <div class="spoon-icon">🥄</div>
   <h2>모든 상황을 함께<br>해결했어요!</h2>
   <p>이제 용기 스푼에 나의 다짐을 적어볼까요?</p>
-  <button class="start-btn" onclick="location.reload()">처음으로</button>
+  <button class="start-btn" onclick="goToPotScreen()">🥄 용기 스푼에 다짐 적으러 가기</button>
+</div>
+
+<!-- 냄비 화면 -->
+<div id="pot-screen">
+  <h2>🥄 우리 반 용기 수프</h2>
+  <p>학생들의 다짐 스푼이 냄비에 담기고 있어요!</p>
+  <p class="spoon-count">담긴 스푼: <span id="spoon-count">0</span>개</p>
+
+  <div class="pot-wrap">
+    <svg class="pot-svg" viewBox="0 0 420 360" xmlns="http://www.w3.org/2000/svg">
+      <!-- 냄비 손잡이 왼쪽 -->
+      <rect x="30" y="150" width="55" height="28" rx="14" fill="#555" />
+      <!-- 냄비 손잡이 오른쪽 -->
+      <rect x="335" y="150" width="55" height="28" rx="14" fill="#555" />
+      <!-- 냄비 몸체 -->
+      <path d="M70 145 Q70 310 210 320 Q350 310 350 145 Z" fill="#3a3a5a"/>
+      <path d="M70 145 Q70 300 210 310 Q350 300 350 145 Z" fill="#4a4a7a"/>
+      <!-- 수프 표면 -->
+      <ellipse cx="210" cy="165" rx="140" ry="32" fill="#E8A44A"/>
+      <ellipse cx="210" cy="162" rx="138" ry="30" fill="#F5B642"/>
+      <!-- 수프 반짝임 -->
+      <ellipse cx="175" cy="155" rx="28" ry="8" fill="#FFD580" opacity="0.5"/>
+      <ellipse cx="240" cy="170" rx="18" ry="5" fill="#FFD580" opacity="0.4"/>
+      <!-- 냄비 윗테두리 -->
+      <ellipse cx="210" cy="145" rx="145" ry="22" fill="#555"/>
+      <ellipse cx="210" cy="143" rx="143" ry="20" fill="#666"/>
+      <!-- 김 (애니메이션) -->
+      <g opacity="0.7">
+        <ellipse cx="160" cy="115" rx="8" ry="18" fill="#ccc" opacity="0.4">
+          <animate attributeName="cy" values="115;85;115" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="rx" values="8;14;8" dur="2s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="210" cy="100" rx="10" ry="22" fill="#ccc" opacity="0.4">
+          <animate attributeName="cy" values="100;65;100" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="rx" values="10;18;10" dur="2.5s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="260" cy="110" rx="8" ry="18" fill="#ccc" opacity="0.4">
+          <animate attributeName="cy" values="110;75;110" dur="1.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="1.8s" repeatCount="indefinite"/>
+          <animate attributeName="rx" values="8;13;8" dur="1.8s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+    </svg>
+    <!-- 스푼들이 여기에 동적으로 추가됨 -->
+    <div id="spoons-container" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+  </div>
+
+  <button class="start-btn" onclick="location.reload()" style="margin-top:10px; font-size:0.95rem; padding:12px 28px; background:#2a2a4a;">↩ 처음으로</button>
+</div>
+
+<!-- 스푼 확대 모달 -->
+<div class="spoon-modal-overlay" id="spoon-modal">
+  <div class="spoon-modal">
+    <div class="modal-emoji">🥄</div>
+    <div class="modal-name" id="modal-name"></div>
+    <div class="modal-pledge" id="modal-pledge"></div>
+    <button class="modal-close" onclick="closeSpoonModal()">닫기</button>
+  </div>
 </div>
 
 <script type="module">
@@ -467,6 +584,97 @@ window.testFloatCards = function() {
   };
   renderBars({stop:4, beside:2, help:1, block:1, talk:2});
   renderChips(dummySnap);
+};
+
+// 냄비 화면으로 이동
+window.goToPotScreen = function() {
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('pot-screen').style.display = 'flex';
+  listenSpoons();
+};
+
+// Firestore에서 스푼 다짐 실시간 수신
+function listenSpoons() {
+  const colRef = collection(db, 'sessions/current/spoons');
+  onSnapshot(colRef, (snap) => {
+    document.getElementById('spoon-count').textContent = snap.size;
+    renderSpoons(snap);
+  });
+}
+
+// 스푼 위치 (냄비 안쪽에 분산)
+const SPOON_POSITIONS = [
+  {x: 170, y: 148}, {x: 220, y: 155}, {x: 195, y: 160},
+  {x: 155, y: 162}, {x: 240, y: 148}, {x: 210, y: 142},
+  {x: 180, y: 153}, {x: 230, y: 163}, {x: 200, y: 170},
+  {x: 165, y: 145}, {x: 250, y: 158}, {x: 145, y: 155},
+  {x: 260, y: 145}, {x: 185, y: 168}, {x: 225, y: 140},
+  {x: 205, y: 158}, {x: 175, y: 138}, {x: 235, y: 168},
+  {x: 150, y: 168}, {x: 255, y: 138},
+];
+
+let renderedSpoonIds = new Set();
+
+function renderSpoons(snap) {
+  const container = document.getElementById('spoons-container');
+  let idx = 0;
+  snap.forEach(d => {
+    if (renderedSpoonIds.has(d.id)) { idx++; return; }
+    renderedSpoonIds.add(d.id);
+    const data = d.data();
+    const pos = SPOON_POSITIONS[idx % SPOON_POSITIONS.length];
+
+    const spoon = document.createElement('div');
+    spoon.className = 'spoon-in-pot';
+    spoon.style.cssText = 'position:absolute; pointer-events:auto; cursor:pointer;';
+    spoon.style.left = pos.x + 'px';
+    spoon.style.top = pos.y + 'px';
+    spoon.style.transform = 'translate(-50%, -50%) rotate(' + (Math.random()*60-30) + 'deg)';
+    spoon.innerHTML = '<svg width="28" height="60" viewBox="0 0 28 60" xmlns="http://www.w3.org/2000/svg"><ellipse cx="14" cy="10" rx="11" ry="9" fill="#F5B642" stroke="#c8890a" stroke-width="1.5"/><rect x="12" y="18" width="4" height="34" rx="2" fill="#E8A44A" stroke="#c8890a" stroke-width="1"/><ellipse cx="14" cy="53" rx="4" ry="3" fill="#c8890a"/></svg>';
+    spoon.onclick = () => openSpoonModal(data.name, data.pledge);
+
+    container.appendChild(spoon);
+    playSpoonSound();
+    idx++;
+  });
+}
+
+function playSpoonSound() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    // 달그락 - 금속 식기 소리
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    const gain2 = ctx.createGain();
+
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(1800 + Math.random()*400, now);
+    osc1.frequency.exponentialRampToValueAtTime(900, now + 0.3);
+    gain1.gain.setValueAtTime(0.3, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc1.connect(gain1); gain1.connect(ctx.destination);
+    osc1.start(now); osc1.stop(now + 0.3);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(2400 + Math.random()*300, now + 0.02);
+    osc2.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+    gain2.gain.setValueAtTime(0.15, now + 0.02);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc2.connect(gain2); gain2.connect(ctx.destination);
+    osc2.start(now + 0.02); osc2.stop(now + 0.2);
+  } catch(e) {}
+}
+
+window.openSpoonModal = function(name, pledge) {
+  document.getElementById('modal-name').textContent = name + '의 다짐';
+  document.getElementById('modal-pledge').textContent = pledge;
+  document.getElementById('spoon-modal').classList.add('show');
+};
+
+window.closeSpoonModal = function() {
+  document.getElementById('spoon-modal').classList.remove('show');
 };
 
 window.resetCurrent = async function() {

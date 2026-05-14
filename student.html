@@ -106,6 +106,49 @@
     font-size: 1rem; font-weight: 600; cursor: pointer;
     display: none;
   }
+
+  /* 다짐 화면 */
+  .pledge-screen {
+    display: none; flex-direction: column; flex: 1;
+    padding: 20px 16px 30px; gap: 14px;
+  }
+  .pledge-header { text-align: center; }
+  .pledge-header .big-emoji { font-size: 2.5rem; }
+  .pledge-header h2 { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; margin-top: 6px; }
+  .pledge-header p { font-size: 0.85rem; color: #666; margin-top: 4px; line-height: 1.5; }
+  .pledge-form { display: flex; flex-direction: column; gap: 12px; }
+  .pledge-label { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .pledge-input {
+    width: 100%; border: 1.5px solid #EEEDFE; border-radius: 10px;
+    padding: 12px 14px; font-size: 0.95rem; font-family: 'Noto Sans KR', sans-serif;
+    outline: none; color: #1a1a2e; background: #fff;
+    box-sizing: border-box;
+  }
+  .pledge-input:focus { border-color: #534AB7; }
+  .pledge-textarea {
+    width: 100%; border: 1.5px solid #EEEDFE; border-radius: 10px;
+    padding: 12px 14px; font-size: 0.95rem; font-family: 'Noto Sans KR', sans-serif;
+    outline: none; color: #1a1a2e; background: #fff; resize: none; height: 110px;
+    box-sizing: border-box; line-height: 1.6;
+  }
+  .pledge-textarea:focus { border-color: #534AB7; }
+  .pledge-submit {
+    width: 100%; background: #534AB7; color: white; border: none;
+    border-radius: 14px; padding: 16px; font-size: 1.05rem;
+    font-weight: 700; cursor: pointer;
+  }
+  .pledge-submit:disabled { background: #aaa; cursor: not-allowed; }
+  .pledge-done {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; flex: 1; gap: 14px; padding: 40px 20px; text-align: center;
+  }
+  .pledge-done .big-emoji { font-size: 3.5rem; }
+  .pledge-done h2 { font-size: 1.2rem; font-weight: 700; color: #534AB7; }
+  .pledge-done p { font-size: 0.9rem; color: #666; line-height: 1.6; }
+  .pledge-done .my-pledge-card {
+    background: #EEEDFE; border-radius: 12px; padding: 14px 18px;
+    font-size: 0.95rem; color: #3C3489; font-weight: 500; line-height: 1.6;
+  }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -185,6 +228,35 @@
   <div class="big-emoji">🥄</div>
   <h2>모든 상황을 완료했어요!</h2>
   <p>이제 용기 스푼에<br>나의 다짐을 적어볼까요?</p>
+  <button class="next-btn" id="go-pledge-btn" style="display:block; margin-top:8px;" onclick="goToPledge()">🥄 용기 스푼에 다짐 적으러 가기</button>
+</div>
+
+<!-- 다짐 작성 화면 -->
+<div class="pledge-screen" id="pledge-screen">
+  <div class="pledge-header">
+    <div class="big-emoji">🥄</div>
+    <h2>나의 용기 스푼 다짐</h2>
+    <p>문제 상황에서 내가 실천할<br>용기 있는 행동을 다짐해봐요!</p>
+  </div>
+  <div class="pledge-form">
+    <div>
+      <div class="pledge-label">이름</div>
+      <input class="pledge-input" id="pledge-name" type="text" placeholder="이름을 입력하세요" maxlength="10">
+    </div>
+    <div>
+      <div class="pledge-label">나의 다짐</div>
+      <textarea class="pledge-textarea" id="pledge-text" placeholder="예) 친구가 힘든 상황에 처했을 때 '괜찮아?'라고 말을 걸겠습니다." maxlength="100"></textarea>
+    </div>
+    <button class="pledge-submit" id="pledge-submit-btn" onclick="submitPledge()">🥄 다짐 제출하기</button>
+  </div>
+</div>
+
+<!-- 다짐 완료 화면 -->
+<div class="pledge-done" id="pledge-done">
+  <div class="big-emoji">✨</div>
+  <h2>용기 스푼을 냄비에 담았어요!</h2>
+  <div class="my-pledge-card" id="my-pledge-display"></div>
+  <p>선생님 화면에서<br>우리 반 냄비를 확인해봐요!</p>
 </div>
 
 <script type="module">
@@ -252,6 +324,36 @@ window.submitCard = async function() {
   } catch (e) {
     btn.disabled = false;
     btn.textContent = '카드 내기!';
+    alert('제출 중 오류가 발생했어요. 다시 시도해주세요.');
+  }
+};
+
+window.goToPledge = function() {
+  document.getElementById('waiting-screen').style.display = 'none';
+  document.getElementById('pledge-screen').style.display = 'flex';
+};
+
+window.submitPledge = async function() {
+  const name = document.getElementById('pledge-name').value.trim();
+  const pledge = document.getElementById('pledge-text').value.trim();
+  if (!name) { alert('이름을 입력해주세요!'); return; }
+  if (!pledge) { alert('다짐을 입력해주세요!'); return; }
+
+  const btn = document.getElementById('pledge-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '제출 중...';
+
+  try {
+    await setDoc(
+      doc(db, 'sessions/current/spoons', studentId),
+      { name, pledge, timestamp: serverTimestamp() }
+    );
+    document.getElementById('pledge-screen').style.display = 'none';
+    document.getElementById('my-pledge-display').textContent = '"' + pledge + '"';
+    document.getElementById('pledge-done').style.display = 'flex';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '🥄 다짐 제출하기';
     alert('제출 중 오류가 발생했어요. 다시 시도해주세요.');
   }
 };
