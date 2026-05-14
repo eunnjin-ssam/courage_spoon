@@ -49,11 +49,25 @@
   .situation-label { font-size: 0.85rem; color: #aaa; font-weight: 500; }
   .situation-img {
     width: 100%; aspect-ratio: 4/3; border-radius: 12px;
-    object-fit: cover; background: #2a2a4a;
+    background: #2a2a4a; position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
     font-size: 3rem; color: #555;
   }
   .situation-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .card-float-area {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; overflow: hidden;
+  }
+  .float-card {
+    position: absolute; font-size: 0.72rem; color: white;
+    padding: 4px 9px; border-radius: 20px; font-weight: 600;
+    animation: floatIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  @keyframes floatIn {
+    from { opacity: 0; transform: scale(0.3) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
   .situation-text {
     font-size: 1.05rem; line-height: 1.8; color: #e0e0e0;
     background: #2a2a4a; border-radius: 10px; padding: 16px;
@@ -158,7 +172,8 @@
       </div>
       <div class="situation-img" id="sit-img">
         <img id="sit-img-tag" src="situation1.png" alt="상황 이미지"
-          onerror="this.style.display='none'; this.parentElement.innerHTML='🎭'">
+          onerror="this.style.display='none';">
+        <div class="card-float-area" id="card-float-area"></div>
       </div>
       <div class="situation-text" id="sit-text">
         쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.
@@ -291,6 +306,7 @@ function renderBars(counts) {
 }
 
 function renderChips(snap) {
+  // 오른쪽 패널 칩
   const area = document.getElementById('flying-cards');
   area.innerHTML = '';
   snap.forEach(d => {
@@ -302,6 +318,45 @@ function renderChips(snap) {
     chip.style.background = card.color;
     chip.textContent = card.emoji + ' ' + card.name;
     area.appendChild(chip);
+  });
+
+  // 왼쪽 이미지 위 float card 시각화
+  const floatArea = document.getElementById('card-float-area');
+  if (!floatArea) return;
+  floatArea.innerHTML = '';
+
+  // 카드별 개수 집계
+  const counts = {};
+  CARDS.forEach(c => counts[c.id] = 0);
+  snap.forEach(d => {
+    const data = d.data();
+    if (counts[data.card] !== undefined) counts[data.card]++;
+  });
+
+  // 이미지 영역 가로/세로 비율에 맞게 위치 분산 배치
+  const positions = [
+    {x: 5, y: 5}, {x: 60, y: 5}, {x: 5, y: 80}, {x: 60, y: 80}, {x: 30, y: 42},
+    {x: 15, y: 40}, {x: 70, y: 40}, {x: 40, y: 10}, {x: 40, y: 75}, {x: 20, y: 65},
+    {x: 65, y: 20}, {x: 10, y: 20}, {x: 75, y: 65}, {x: 50, y: 55}, {x: 25, y: 25},
+    {x: 55, y: 30}, {x: 35, y: 60}, {x: 80, y: 50}, {x: 5, y: 55}, {x: 70, y: 15},
+    {x: 45, y: 85}, {x: 15, y: 88}, {x: 82, y: 30}, {x: 55, y: 72}, {x: 30, y: 15},
+  ];
+  let posIdx = 0;
+
+  CARDS.forEach(card => {
+    const cnt = counts[card.id] || 0;
+    for (let i = 0; i < cnt; i++) {
+      if (posIdx >= positions.length) return;
+      const pos = positions[posIdx++];
+      const el = document.createElement('div');
+      el.className = 'float-card';
+      el.style.background = card.color;
+      el.style.left = pos.x + '%';
+      el.style.top = pos.y + '%';
+      el.style.animationDelay = (posIdx * 0.05) + 's';
+      el.textContent = card.emoji + ' ' + card.name;
+      floatArea.appendChild(el);
+    }
   });
 }
 
