@@ -614,43 +614,10 @@ window.testFloatCards = function() {
 };
 
 // 냄비 화면으로 이동
-let bubblingInterval = null;
-
-function playBubbleSound() {
-  try {
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    // 보글보글 - 물방울 터지는 느낌
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    const freq = 300 + Math.random() * 200;
-    osc.frequency.setValueAtTime(freq, now);
-    osc.frequency.exponentialRampToValueAtTime(freq * 1.4, now + 0.06);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.8, now + 0.12);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.08, now + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.14);
-  } catch(e) {}
-}
-
-function startBubbling() {
-  if (bubblingInterval) return;
-  bubblingInterval = setInterval(() => {
-    // 랜덤 간격으로 보글보글
-    if (Math.random() > 0.4) playBubbleSound();
-  }, 400);
-}
-
 window.goToPotScreen = function() {
   document.getElementById('end-screen').style.display = 'none';
   document.getElementById('pot-screen').style.display = 'flex';
   listenSpoons();
-  startBubbling();
 };
 
 // Firestore에서 스푼 다짐 실시간 수신
@@ -664,13 +631,13 @@ function listenSpoons() {
 
 // 스푼 위치 (냄비 안쪽에 분산)
 const SPOON_POSITIONS = [
-  {x: 280, y: 235}, {x: 350, y: 228}, {x: 315, y: 245},
-  {x: 245, y: 238}, {x: 385, y: 232}, {x: 340, y: 218},
-  {x: 295, y: 252}, {x: 370, y: 248}, {x: 260, y: 225},
-  {x: 410, y: 240}, {x: 230, y: 245}, {x: 420, y: 225},
-  {x: 220, y: 230}, {x: 435, y: 248}, {x: 305, y: 220},
-  {x: 360, y: 258}, {x: 270, y: 255}, {x: 395, y: 215},
-  {x: 240, y: 258}, {x: 450, y: 238},
+  {x: 280, y: 175}, {x: 350, y: 168}, {x: 315, y: 182},
+  {x: 245, y: 172}, {x: 385, y: 170}, {x: 340, y: 160},
+  {x: 295, y: 185}, {x: 370, y: 178}, {x: 260, y: 165},
+  {x: 410, y: 175}, {x: 230, y: 180}, {x: 420, y: 165},
+  {x: 220, y: 170}, {x: 435, y: 182}, {x: 305, y: 158},
+  {x: 360, y: 188}, {x: 270, y: 190}, {x: 395, y: 158},
+  {x: 240, y: 188}, {x: 450, y: 172},
 ];
 
 let renderedSpoonIds = new Set();
@@ -692,11 +659,10 @@ function renderSpoons(snap) {
     spoon.style.top = pos.y + 'px';
     spoon.style.setProperty('--spoon-rot', rot + 'deg');
     // 세워진 숟가락: 손잡이 아래, 숟가락 머리 위로
-    spoon.innerHTML = '<svg width="22" height="90" viewBox="0 0 22 90" xmlns="http://www.w3.org/2000/svg">' +
-      '<ellipse cx="11" cy="5" rx="3.5" ry="2.5" fill="#c8890a"/>' +
-      '<rect x="9" y="6" width="4" height="58" rx="2" fill="#E8A44A" stroke="#c8890a" stroke-width="1"/>' +
-      '<ellipse cx="11" cy="76" rx="10" ry="12" fill="#F5C842" stroke="#c8890a" stroke-width="1.5"/>' +
-      '<ellipse cx="11" cy="76" rx="7" ry="9" fill="#FFE080" opacity="0.5"/>' +
+    // 손잡이만 수프 위로 보이게 - 아랫부분은 냄비 안에 잠김
+    spoon.innerHTML = '<svg width="16" height="70" viewBox="0 0 16 70" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="8" cy="4" rx="3" ry="2.5" fill="#b07010"/>' +
+      '<rect x="6" y="6" width="4" height="62" rx="2" fill="#E8A44A" stroke="#c8890a" stroke-width="1"/>' +
       '</svg>';
     spoon.onclick = () => openSpoonModal(data.name, data.pledge);
 
