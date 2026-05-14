@@ -59,7 +59,7 @@
   .card-btn.stop.selected    { border-color: #534AB7; background: #EEEDFE; }
   .card-btn.beside.selected  { border-color: #0F6E56; background: #E1F5EE; }
   .card-btn.help.selected    { border-color: #D85A30; background: #FAECE7; }
-  .card-btn.record.selected  { border-color: #BA7517; background: #FAEEDA; }
+  .card-btn.block.selected   { border-color: #1565C0; background: #E3F2FD; }
   .card-btn.talk.selected    { border-color: #993556; background: #FBEAF0; }
   .card-btn .card-emoji { font-size: 2rem; }
   .card-btn .card-name { font-size: 0.8rem; font-weight: 600; color: #333; }
@@ -152,10 +152,10 @@
       <span class="card-name">도움 요청</span>
       <span class="card-desc">믿을 수 있는<br>어른에게 알리기</span>
     </button>
-    <button class="card-btn record" onclick="selectCard('record', this)">
-      <span class="card-emoji">📱</span>
-      <span class="card-name">기록하기</span>
-      <span class="card-desc">증거<br>남겨 주기</span>
+    <button class="card-btn block" onclick="selectCard('block', this)">
+      <span class="card-emoji">🛡️</span>
+      <span class="card-name">막아주기</span>
+      <span class="card-desc">소문·사진·놀림이<br>더 퍼지지 않도록</span>
     </button>
     <button class="card-btn talk full-width" onclick="selectCard('talk', this)">
       <span class="card-emoji">🗣️</span>
@@ -215,7 +215,7 @@ const SITUATIONS = [
 
 const CARD_NAMES = {
   stop: "🛑 멈춤", beside: "🤝 곁에 있기",
-  help: "📣 도움 요청", record: "📱 기록하기", talk: "🗣️ 말 걸기"
+  help: "📣 도움 요청", block: "🛡️ 막아주기", talk: "🗣️ 말 걸기"
 };
 
 let currentIdx = 0;

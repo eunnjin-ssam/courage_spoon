@@ -249,7 +249,7 @@ const CARDS = [
   { id: "stop",    emoji: "🛑", name: "멈춤",      color: "#534AB7" },
   { id: "beside",  emoji: "🤝", name: "곁에 있기", color: "#0F6E56" },
   { id: "help",    emoji: "📣", name: "도움 요청", color: "#D85A30" },
-  { id: "record",  emoji: "📱", name: "기록하기",  color: "#BA7517" },
+  { id: "block",   emoji: "🛡️", name: "막아주기",  color: "#1565C0" },
   { id: "talk",    emoji: "🗣️", name: "말 걸기",   color: "#993556" },
 ];
 
@@ -405,11 +405,11 @@ window.testFloatCards = function() {
   const dummySnap = {
     size: 10,
     forEach: (cb) => {
-      const cards = ['stop','stop','stop','beside','beside','help','record','talk','talk','stop'];
+      const cards = ['stop','stop','stop','beside','beside','help','block','talk','talk','stop'];
       cards.forEach((card, i) => cb({ data: () => ({ card }), id: 'test' + i }));
     }
   };
-  renderBars({stop:4, beside:2, help:1, record:1, talk:2});
+  renderBars({stop:4, beside:2, help:1, block:1, talk:2});
   renderChips(dummySnap);
 };
 
