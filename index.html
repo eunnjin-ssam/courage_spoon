@@ -265,23 +265,48 @@ function getAudioCtx() {
 function playCardSound() {
   try {
     const ctx = getAudioCtx();
-    // 짧고 경쾌한 "탁!" 소리
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
     const now = ctx.currentTime;
 
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    // 카드 슥~ 넘기는 소리: 노이즈 + 필터로 구현
+    const bufferSize = ctx.sampleRate * 0.18;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
 
+    // 밴드패스 필터로 카드 넘기는 질감
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(3000, now);
+    filter.frequency.exponentialRampToValueAtTime(800, now + 0.18);
+    filter.Q.value = 0.8;
+
+    // 볼륨 엔벨로프 - 빠르게 올라갔다 스르르 사라짐
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.35, now + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+    // 살짝 피치감 추가 (오실레이터 레이어)
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
-    osc.frequency.exponentialRampToValueAtTime(200, now + 0.12);
-
-    gainNode.gain.setValueAtTime(0.4, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-
+    osc.frequency.setValueAtTime(1200 + Math.random() * 300, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+    oscGain.gain.setValueAtTime(0.08, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.15);
+    osc.stop(now + 0.12);
+
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    noise.start(now);
   } catch(e) {}
 }
 
