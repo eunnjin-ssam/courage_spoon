@@ -59,14 +59,24 @@
     pointer-events: none; overflow: hidden;
   }
   .float-card {
-    position: absolute; font-size: 0.72rem; color: white;
-    padding: 4px 9px; border-radius: 20px; font-weight: 600;
-    animation: floatIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    opacity: 0; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    position: absolute;
+    width: 52px; height: 72px;
+    border-radius: 8px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    color: white; font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    opacity: 0;
+    animation: cardThrow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
-  @keyframes floatIn {
-    from { opacity: 0; transform: scale(0.3) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+  .float-card .card-emoji-big { font-size: 1.5rem; line-height: 1; }
+  .float-card .card-name-small { font-size: 0.55rem; text-align: center; line-height: 1.2; padding: 0 2px; opacity: 0.9; }
+  @keyframes cardThrow {
+    0%   { opacity: 0; transform: translateY(-60px) translateX(30px) rotate(-20deg) scale(0.4); }
+    60%  { opacity: 1; transform: translateY(6px) translateX(-3px) rotate(3deg) scale(1.05); }
+    80%  { transform: translateY(-3px) translateX(1px) rotate(-1deg) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) translateX(0) rotate(var(--rot)) scale(1); }
   }
   .situation-text {
     font-size: 1.05rem; line-height: 1.8; color: #e0e0e0;
@@ -172,7 +182,8 @@
       </div>
       <div class="situation-img" id="sit-img">
         <img id="sit-img-tag" src="situation1.png" alt="상황 이미지"
-          onerror="this.style.display='none';">
+          onerror="this.style.display='none'; document.getElementById('sit-img-placeholder').style.display='flex';">
+        <div id="sit-img-placeholder" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; align-items:center; justify-content:center; font-size:3rem;">🎭</div>
         <div class="card-float-area" id="card-float-area"></div>
       </div>
       <div class="situation-text" id="sit-text">
@@ -195,6 +206,7 @@
         <button class="btn-resolve" id="btn-resolve" onclick="resolveState()">✨ 해결 이미지 보기</button>
         <button class="btn-next" id="btn-next" onclick="nextSituation()">다음 상황 →</button>
         <button class="btn-reset" onclick="resetCurrent()">초기화</button>
+        <button class="btn-reset" onclick="testFloatCards()" style="background:#2a4a3a; color:#5DCAA5;">테스트</button>
       </div>
     </div>
   </div>
@@ -261,6 +273,8 @@ function loadSituation(idx) {
   document.getElementById('sit-text').textContent = sit.text;
   document.getElementById('sit-img-tag').src = sit.img;
   document.getElementById('sit-img-tag').style.display = 'block';
+  document.getElementById('sit-img-placeholder').style.display = 'none';
+  document.getElementById('card-float-area').innerHTML = '';
   document.getElementById('resolved-overlay').classList.remove('show');
   document.getElementById('btn-resolve').style.display = 'block';
   document.getElementById('btn-next').style.display = idx < 5 ? 'none' : 'none';
@@ -353,8 +367,10 @@ function renderChips(snap) {
       el.style.background = card.color;
       el.style.left = pos.x + '%';
       el.style.top = pos.y + '%';
-      el.style.animationDelay = (posIdx * 0.05) + 's';
-      el.textContent = card.emoji + ' ' + card.name;
+      el.style.animationDelay = (posIdx * 0.08) + 's';
+      const rot = (Math.random() * 24 - 12).toFixed(1);
+      el.style.setProperty('--rot', rot + 'deg');
+      el.innerHTML = '<span class="card-emoji-big">' + card.emoji + '</span><span class="card-name-small">' + card.name + '</span>';
       floatArea.appendChild(el);
     }
   });
@@ -382,6 +398,19 @@ window.nextSituation = function() {
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById('end-screen').style.display = 'flex';
   }
+};
+
+window.testFloatCards = function() {
+  // 더미 스냅 만들어서 float 카드 테스트
+  const dummySnap = {
+    size: 10,
+    forEach: (cb) => {
+      const cards = ['stop','stop','stop','beside','beside','help','record','talk','talk','stop'];
+      cards.forEach((card, i) => cb({ data: () => ({ card }), id: 'test' + i }));
+    }
+  };
+  renderBars({stop:4, beside:2, help:1, record:1, talk:2});
+  renderChips(dummySnap);
 };
 
 window.resetCurrent = async function() {
