@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>방관 대신 용기 한 스푼 — 학생 화면</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f8f9ff; color: #1a1a2e;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+
+  .header {
+    background: #534AB7; color: white;
+    padding: 14px 20px; text-align: center;
+  }
+  .header .badge { font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px; }
+  .header h1 { font-size: 1.1rem; font-weight: 700; }
+
+  .progress-wrap { background: #EEEDFE; height: 6px; }
+  .progress-fill { height: 6px; background: #534AB7; transition: width 0.4s; }
+
+  .content { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .situation-card {
+    background: white; border-radius: 14px;
+    border: 1.5px solid #EEEDFE; overflow: hidden;
+  }
+  .situation-top {
+    background: #EEEDFE; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .situation-num { font-size: 0.8rem; font-weight: 600; color: #534AB7; }
+  .situation-tag { font-size: 0.75rem; color: #3C3489; }
+  .situation-img-wrap {
+    width: 100%; aspect-ratio: 16/9; background: #f0f0f8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem; color: #bbb;
+  }
+  .situation-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .situation-body { padding: 12px 14px; font-size: 0.9rem; line-height: 1.7; color: #333; }
+
+  .question { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; text-align: center; }
+
+  .cards-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .card-btn {
+    background: white; border: 2px solid #e0e0e0;
+    border-radius: 14px; padding: 14px 10px;
+    text-align: center; cursor: pointer;
+    transition: all 0.15s; display: flex;
+    flex-direction: column; align-items: center; gap: 6px;
+  }
+  .card-btn:active { transform: scale(0.96); }
+  .card-btn.selected { border-width: 2.5px; }
+  .card-btn.stop.selected    { border-color: #534AB7; background: #EEEDFE; }
+  .card-btn.beside.selected  { border-color: #0F6E56; background: #E1F5EE; }
+  .card-btn.help.selected    { border-color: #D85A30; background: #FAECE7; }
+  .card-btn.record.selected  { border-color: #BA7517; background: #FAEEDA; }
+  .card-btn.talk.selected    { border-color: #993556; background: #FBEAF0; }
+  .card-btn .card-emoji { font-size: 2rem; }
+  .card-btn .card-name { font-size: 0.8rem; font-weight: 600; color: #333; }
+  .card-btn .card-desc { font-size: 0.7rem; color: #888; line-height: 1.4; }
+
+  .card-btn.full-width { grid-column: span 2; flex-direction: row; justify-content: center; gap: 12px; }
+  .card-btn.full-width .card-emoji { font-size: 1.8rem; }
+
+  .submit-area { padding: 0 0 20px; }
+  .submit-btn {
+    width: 100%; background: #534AB7; color: white;
+    border: none; border-radius: 14px; padding: 16px;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .submit-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .submit-btn:not(:disabled):active { background: #3C3489; }
+
+  .submitted-screen {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; flex: 1; gap: 16px; padding: 40px 20px;
+    text-align: center;
+  }
+  .submitted-screen .big-emoji { font-size: 4rem; }
+  .submitted-screen h2 { font-size: 1.3rem; font-weight: 700; color: #534AB7; }
+  .submitted-screen p { font-size: 0.95rem; color: #666; line-height: 1.6; }
+  .submitted-card {
+    background: #EEEDFE; border-radius: 12px; padding: 12px 20px;
+    font-size: 0.9rem; color: #3C3489; font-weight: 500;
+  }
+
+  .waiting-screen {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; flex: 1; gap: 16px; padding: 40px 20px;
+    text-align: center;
+  }
+  .waiting-screen .big-emoji { font-size: 3rem; }
+  .waiting-screen h2 { font-size: 1.1rem; font-weight: 700; color: #333; }
+  .waiting-screen p { font-size: 0.9rem; color: #888; }
+
+  .next-btn {
+    background: #534AB7; color: white; border: none;
+    border-radius: 12px; padding: 14px 32px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    display: none;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">得 Peaceful-harmony · SOUP 프로그램</div>
+  <h1>방관 대신 용기 한 스푼 🥄</h1>
+</div>
+<div class="progress-wrap">
+  <div class="progress-fill" id="progress-fill" style="width:16.6%"></div>
+</div>
+
+<div class="content" id="main-content">
+  <div class="situation-card">
+    <div class="situation-top">
+      <span class="situation-num" id="sit-num">상황 1 / 6</span>
+      <span class="situation-tag" id="sit-tag">오프라인</span>
+    </div>
+    <div class="situation-img-wrap" id="sit-img-wrap">
+      <img id="sit-img" src="images/situation1.png" alt="상황 이미지"
+        onerror="this.style.display='none'; this.parentElement.innerHTML='🎭'">
+    </div>
+    <div class="situation-body" id="sit-body">
+      쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.
+    </div>
+  </div>
+
+  <p class="question">이 상황에서 어떤 용기 카드를 낼 수 있을까요?</p>
+
+  <div class="cards-grid" id="cards-grid">
+    <button class="card-btn stop" onclick="selectCard('stop', this)">
+      <span class="card-emoji">🛑</span>
+      <span class="card-name">멈춤</span>
+      <span class="card-desc">가해자에게<br>"멈춰!" 말하기</span>
+    </button>
+    <button class="card-btn beside" onclick="selectCard('beside', this)">
+      <span class="card-emoji">🤝</span>
+      <span class="card-name">곁에 있기</span>
+      <span class="card-desc">힘든 친구<br>옆에 있어 주기</span>
+    </button>
+    <button class="card-btn help" onclick="selectCard('help', this)">
+      <span class="card-emoji">📣</span>
+      <span class="card-name">도움 요청</span>
+      <span class="card-desc">믿을 수 있는<br>어른에게 알리기</span>
+    </button>
+    <button class="card-btn record" onclick="selectCard('record', this)">
+      <span class="card-emoji">📱</span>
+      <span class="card-name">기록하기</span>
+      <span class="card-desc">증거<br>남겨 주기</span>
+    </button>
+    <button class="card-btn talk full-width" onclick="selectCard('talk', this)">
+      <span class="card-emoji">🗣️</span>
+      <div>
+        <div class="card-name">말 걸기</div>
+        <div class="card-desc">"괜찮아?" 한마디 건네기</div>
+      </div>
+    </button>
+  </div>
+
+  <div class="submit-area">
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitCard()">
+      카드를 선택해주세요
+    </button>
+  </div>
+</div>
+
+<div class="submitted-screen" id="submitted-screen">
+  <div class="big-emoji">✅</div>
+  <h2>카드를 제출했어요!</h2>
+  <div class="submitted-card" id="submitted-card-display"></div>
+  <p>선생님 화면에서<br>결과를 함께 확인해봐요!</p>
+  <button class="next-btn" id="next-btn" onclick="goNext()">다음 상황 →</button>
+</div>
+
+<div class="waiting-screen" id="waiting-screen">
+  <div class="big-emoji">🥄</div>
+  <h2>모든 상황을 완료했어요!</h2>
+  <p>이제 용기 스푼에<br>나의 다짐을 적어볼까요?</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyALMrsAUydtFCizQoSvdSOqmO1o0pVH6OE",
+  authDomain: "ns3rd-3a5d3.firebaseapp.com",
+  projectId: "ns3rd-3a5d3",
+  storageBucket: "ns3rd-3a5d3.firebasestorage.app",
+  messagingSenderId: "1032550243279",
+  appId: "1:1032550243279:web:1d6d2da4145e6a06c310ba",
+  measurementId: "G-TQTXX8XZLR"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const SITUATIONS = [
+  { num: "상황 1 / 6", tag: "오프라인", text: "쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.", img: "images/situation1.png" },
+  { num: "상황 2 / 6", tag: "오프라인", text: "모둠 활동 중 한 친구의 의견을 다들 무시하고 비웃는데 아무도 편을 들어주지 않는다.", img: "images/situation2.png" },
+  { num: "상황 3 / 6", tag: "오프라인", text: "발표 후 한 친구의 실수를 여러 명이 계속 흉내 내며 놀리고 있다.", img: "images/situation3.png" },
+  { num: "상황 4 / 6", tag: "온라인", text: "단톡방에서 한 친구를 대상으로 여러 명이 계속 놀리는 메시지를 보내고 있다.", img: "images/situation4.png" },
+  { num: "상황 5 / 6", tag: "온라인", text: "친구의 부끄러운 사진이 허락 없이 단톡방에 올라왔고, 다들 웃으며 퍼나르고 있다.", img: "images/situation5.png" },
+  { num: "상황 6 / 6", tag: "오프라인", text: "점심시간에 몇몇 친구들이 일부러 한 친구만 빼고 자리를 잡는다. 그 친구가 혼자 앉아 있는데, 주변 친구들은 눈치만 보고 아무 말도 하지 않는다.", img: "images/situation6.png" },
+];
+
+const CARD_NAMES = {
+  stop: "🛑 멈춤", beside: "🤝 곁에 있기",
+  help: "📣 도움 요청", record: "📱 기록하기", talk: "🗣️ 말 걸기"
+};
+
+let currentIdx = 0;
+let selectedCard = null;
+let studentId = localStorage.getItem('studentId') || ('s_' + Math.random().toString(36).substr(2, 9));
+localStorage.setItem('studentId', studentId);
+
+window.selectCard = function(cardId, el) {
+  selectedCard = cardId;
+  document.querySelectorAll('.card-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = false;
+  btn.textContent = '카드 내기!';
+};
+
+window.submitCard = async function() {
+  if (!selectedCard) return;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '제출 중...';
+
+  try {
+    await setDoc(
+      doc(db, `sessions/current/situation${currentIdx + 1}`, studentId),
+      { card: selectedCard, timestamp: serverTimestamp() }
+    );
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('submitted-screen').style.display = 'flex';
+    document.getElementById('submitted-card-display').textContent = CARD_NAMES[selectedCard];
+    if (currentIdx < 5) {
+      document.getElementById('next-btn').style.display = 'block';
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '카드 내기!';
+    alert('제출 중 오류가 발생했어요. 다시 시도해주세요.');
+  }
+};
+
+window.goNext = function() {
+  currentIdx++;
+  if (currentIdx >= 6) {
+    document.getElementById('submitted-screen').style.display = 'none';
+    document.getElementById('waiting-screen').style.display = 'flex';
+    return;
+  }
+  selectedCard = null;
+  const sit = SITUATIONS[currentIdx];
+  document.getElementById('sit-num').textContent = sit.num;
+  document.getElementById('sit-tag').textContent = sit.tag;
+  document.getElementById('sit-body').textContent = sit.text;
+  const img = document.getElementById('sit-img');
+  img.src = sit.img;
+  img.style.display = 'block';
+  document.getElementById('progress-fill').style.width = ((currentIdx + 1) / 6 * 100) + '%';
+  document.querySelectorAll('.card-btn').forEach(b => b.classList.remove('selected'));
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '카드를 선택해주세요';
+  document.getElementById('submitted-screen').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('main-content').style.display = 'flex';
+};
+</script>
+</body>
+</html>

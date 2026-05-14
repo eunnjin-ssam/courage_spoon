@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방관 대신 용기 한 스푼 — 교사 화면</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #0f0f1e; color: #fff; min-height: 100vh; }
+
+  #start-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; gap: 24px; padding: 40px;
+  }
+  #start-screen h1 { font-size: 2.2rem; font-weight: 700; color: #fff; text-align: center; }
+  #start-screen p { font-size: 1.1rem; color: #aaa; text-align: center; }
+  .soup-badge {
+    background: linear-gradient(135deg, #FF8C42, #FF6B6B);
+    color: white; font-size: 1rem; font-weight: 600;
+    padding: 8px 20px; border-radius: 20px; margin-bottom: 8px;
+  }
+  .start-btn {
+    background: #534AB7; color: white; border: none;
+    font-size: 1.2rem; font-weight: 600; padding: 16px 48px;
+    border-radius: 12px; cursor: pointer; transition: background 0.2s;
+  }
+  .start-btn:hover { background: #3C3489; }
+
+  #game-screen { display: none; padding: 20px; min-height: 100vh; }
+
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .progress-info { font-size: 1rem; color: #aaa; }
+  .progress-info span { color: #fff; font-weight: 600; font-size: 1.2rem; }
+  .submit-count { font-size: 1rem; color: #aaa; }
+  .submit-count span { color: #FF8C42; font-weight: 600; }
+
+  .progress-bar-wrap { background: #2a2a4a; border-radius: 8px; height: 8px; margin-bottom: 20px; }
+  .progress-bar-fill { height: 8px; border-radius: 8px; background: #534AB7; transition: width 0.4s; }
+
+  .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .situation-panel {
+    background: #1a1a2e; border-radius: 16px; padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .situation-label { font-size: 0.85rem; color: #aaa; font-weight: 500; }
+  .situation-img {
+    width: 100%; aspect-ratio: 4/3; border-radius: 12px;
+    object-fit: cover; background: #2a2a4a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; color: #555;
+  }
+  .situation-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .situation-text {
+    font-size: 1.05rem; line-height: 1.8; color: #e0e0e0;
+    background: #2a2a4a; border-radius: 10px; padding: 16px;
+  }
+  .situation-number {
+    font-size: 0.8rem; color: #534AB7; font-weight: 600;
+    background: #EEEDFE22; padding: 4px 10px; border-radius: 20px;
+    display: inline-block; margin-bottom: 4px;
+  }
+
+  .result-panel { background: #1a1a2e; border-radius: 16px; padding: 24px; }
+  .result-title { font-size: 1rem; color: #aaa; margin-bottom: 16px; font-weight: 500; }
+
+  .card-bars { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .card-bar-row { display: flex; align-items: center; gap: 10px; }
+  .card-bar-label { width: 110px; font-size: 0.9rem; color: #ddd; flex-shrink: 0; }
+  .card-bar-track { flex: 1; background: #2a2a4a; border-radius: 6px; height: 28px; overflow: hidden; position: relative; }
+  .card-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 10px; min-width: 0; }
+  .card-bar-count { font-size: 0.85rem; color: white; font-weight: 600; white-space: nowrap; }
+  .card-bar-pct { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-left: 4px; }
+
+  .flying-cards-area {
+    background: #2a2a4a; border-radius: 10px; padding: 12px;
+    min-height: 60px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+  }
+  .flying-card-chip {
+    font-size: 0.8rem; color: white; padding: 4px 10px;
+    border-radius: 20px; animation: flyIn 0.4s ease;
+  }
+  @keyframes flyIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.8); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+  .btn-resolve {
+    flex: 1; background: #0F6E56; color: white; border: none;
+    font-size: 1rem; font-weight: 600; padding: 14px;
+    border-radius: 10px; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-resolve:hover { background: #085041; }
+  .btn-next {
+    flex: 1; background: #534AB7; color: white; border: none;
+    font-size: 1rem; font-weight: 600; padding: 14px;
+    border-radius: 10px; cursor: pointer; transition: background 0.2s;
+    display: none;
+  }
+  .btn-next:hover { background: #3C3489; }
+  .btn-reset {
+    background: #2a2a4a; color: #aaa; border: none;
+    font-size: 0.9rem; padding: 14px 20px;
+    border-radius: 10px; cursor: pointer;
+  }
+
+  .resolved-overlay {
+    display: none; background: #0F6E5622;
+    border: 2px solid #0F6E56; border-radius: 10px;
+    padding: 16px; text-align: center; margin-top: 12px;
+  }
+  .resolved-overlay.show { display: block; }
+  .resolved-overlay p { font-size: 1rem; color: #5DCAA5; font-weight: 600; }
+
+  #end-screen {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; gap: 20px; padding: 40px;
+  }
+  #end-screen h2 { font-size: 2rem; font-weight: 700; text-align: center; }
+  #end-screen p { font-size: 1.1rem; color: #aaa; text-align: center; }
+  .spoon-icon { font-size: 4rem; }
+
+  @media (max-width: 768px) {
+    .main-content { grid-template-columns: 1fr; }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="start-screen">
+  <div class="soup-badge">得 Peaceful-harmony</div>
+  <h1>방관 대신<br>용기 한 스푼 🥄</h1>
+  <p>교사 화면입니다.<br>학생들이 QR코드로 접속하면 카드를 제출할 수 있어요.</p>
+  <button class="start-btn" onclick="startGame()">수업 시작하기</button>
+</div>
+
+<div id="game-screen">
+  <div class="top-bar">
+    <div class="progress-info">상황 <span id="cur-num">1</span> / 6</div>
+    <div class="submit-count">제출한 학생: <span id="submit-count">0</span>명</div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar" style="width:16.6%"></div>
+  </div>
+
+  <div class="main-content">
+    <div class="situation-panel">
+      <div>
+        <div class="situation-number" id="sit-number">상황 1 — 오프라인</div>
+        <div class="situation-label" id="sit-label">쉬는 시간, 욕설 장면</div>
+      </div>
+      <div class="situation-img" id="sit-img">
+        <img id="sit-img-tag" src="images/situation1.png" alt="상황 이미지"
+          onerror="this.style.display='none'; this.parentElement.innerHTML='🎭'">
+      </div>
+      <div class="situation-text" id="sit-text">
+        쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.
+      </div>
+      <div class="resolved-overlay" id="resolved-overlay">
+        <p>✨ 용기 있는 행동이 상황을 바꿨어요!</p>
+        <img id="sit-resolved-img" src="images/situation1_resolved.png" alt="해결된 상황"
+          style="width:100%; border-radius:8px; margin-top:10px;"
+          onerror="this.style.display='none'">
+      </div>
+    </div>
+
+    <div class="result-panel">
+      <div class="result-title">실시간 카드 현황</div>
+      <div class="card-bars" id="card-bars"></div>
+      <div class="result-title" style="margin-top:8px;">제출된 카드</div>
+      <div class="flying-cards-area" id="flying-cards"></div>
+      <div class="btn-row">
+        <button class="btn-resolve" id="btn-resolve" onclick="resolveState()">✨ 해결 이미지 보기</button>
+        <button class="btn-next" id="btn-next" onclick="nextSituation()">다음 상황 →</button>
+        <button class="btn-reset" onclick="resetCurrent()">초기화</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="end-screen">
+  <div class="spoon-icon">🥄</div>
+  <h2>모든 상황을 함께<br>해결했어요!</h2>
+  <p>이제 용기 스푼에 나의 다짐을 적어볼까요?</p>
+  <button class="start-btn" onclick="location.reload()">처음으로</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyALMrsAUydtFCizQoSvdSOqmO1o0pVH6OE",
+  authDomain: "ns3rd-3a5d3.firebaseapp.com",
+  projectId: "ns3rd-3a5d3",
+  storageBucket: "ns3rd-3a5d3.firebasestorage.app",
+  messagingSenderId: "1032550243279",
+  appId: "1:1032550243279:web:1d6d2da4145e6a06c310ba",
+  measurementId: "G-TQTXX8XZLR"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const SITUATIONS = [
+  { number: "상황 1 — 오프라인", label: "쉬는 시간, 욕설 장면", text: "쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.", img: "images/situation1.png", resolved: "images/situation1_resolved.png" },
+  { number: "상황 2 — 오프라인", label: "모둠 활동, 의견 무시", text: "모둠 활동 중 한 친구의 의견을 다들 무시하고 비웃는데 아무도 편을 들어주지 않는다.", img: "images/situation2.png", resolved: "images/situation2_resolved.png" },
+  { number: "상황 3 — 오프라인", label: "발표 실수 흉내 내며 놀리기", text: "발표 후 한 친구의 실수를 여러 명이 계속 흉내 내며 놀리고 있다.", img: "images/situation3.png", resolved: "images/situation3_resolved.png" },
+  { number: "상황 4 — 온라인", label: "단톡방 집단 놀림", text: "단톡방에서 한 친구를 대상으로 여러 명이 계속 놀리는 메시지를 보내고 있다.", img: "images/situation4.png", resolved: "images/situation4_resolved.png" },
+  { number: "상황 5 — 온라인", label: "허락 없이 사진 공유", text: "친구의 부끄러운 사진이 허락 없이 단톡방에 올라왔고, 다들 웃으며 퍼나르고 있다.", img: "images/situation5.png", resolved: "images/situation5_resolved.png" },
+  { number: "상황 6 — 오프라인", label: "점심시간 따돌림", text: "점심시간에 몇몇 친구들이 일부러 한 친구만 빼고 자리를 잡는다. 그 친구가 혼자 앉아 있는데, 주변 친구들은 눈치만 보고 아무 말도 하지 않는다.", img: "images/situation6.png", resolved: "images/situation6_resolved.png" },
+];
+
+const CARDS = [
+  { id: "stop",    emoji: "🛑", name: "멈춤",      color: "#534AB7" },
+  { id: "beside",  emoji: "🤝", name: "곁에 있기", color: "#0F6E56" },
+  { id: "help",    emoji: "📣", name: "도움 요청", color: "#D85A30" },
+  { id: "record",  emoji: "📱", name: "기록하기",  color: "#BA7517" },
+  { id: "talk",    emoji: "🗣️", name: "말 걸기",   color: "#993556" },
+];
+
+let currentIdx = 0;
+let unsubscribe = null;
+
+window.startGame = function() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  loadSituation(0);
+};
+
+function loadSituation(idx) {
+  currentIdx = idx;
+  const sit = SITUATIONS[idx];
+
+  document.getElementById('cur-num').textContent = idx + 1;
+  document.getElementById('progress-bar').style.width = ((idx + 1) / 6 * 100) + '%';
+  document.getElementById('sit-number').textContent = sit.number;
+  document.getElementById('sit-label').textContent = sit.label;
+  document.getElementById('sit-text').textContent = sit.text;
+  document.getElementById('sit-img-tag').src = sit.img;
+  document.getElementById('sit-img-tag').style.display = 'block';
+  document.getElementById('resolved-overlay').classList.remove('show');
+  document.getElementById('btn-resolve').style.display = 'block';
+  document.getElementById('btn-next').style.display = idx < 5 ? 'none' : 'none';
+  document.getElementById('flying-cards').innerHTML = '';
+  document.getElementById('submit-count').textContent = '0';
+
+  renderBars({});
+
+  if (unsubscribe) unsubscribe();
+  const colRef = collection(db, `sessions/current/situation${idx + 1}`);
+  unsubscribe = onSnapshot(colRef, (snap) => {
+    const counts = {};
+    CARDS.forEach(c => counts[c.id] = 0);
+    snap.forEach(d => {
+      const data = d.data();
+      if (counts[data.card] !== undefined) counts[data.card]++;
+    });
+    renderBars(counts);
+    document.getElementById('submit-count').textContent = snap.size;
+    renderChips(snap);
+  });
+}
+
+function renderBars(counts) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const container = document.getElementById('card-bars');
+  container.innerHTML = '';
+  CARDS.forEach(card => {
+    const cnt = counts[card.id] || 0;
+    const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'card-bar-row';
+    row.innerHTML = `
+      <div class="card-bar-label">${card.emoji} ${card.name}</div>
+      <div class="card-bar-track">
+        <div class="card-bar-fill" style="width:${pct}%; background:${card.color};">
+          <span class="card-bar-count">${cnt}명</span>
+          <span class="card-bar-pct">${total > 0 ? pct + '%' : ''}</span>
+        </div>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+function renderChips(snap) {
+  const area = document.getElementById('flying-cards');
+  area.innerHTML = '';
+  snap.forEach(d => {
+    const data = d.data();
+    const card = CARDS.find(c => c.id === data.card);
+    if (!card) return;
+    const chip = document.createElement('span');
+    chip.className = 'flying-card-chip';
+    chip.style.background = card.color;
+    chip.textContent = card.emoji + ' ' + card.name;
+    area.appendChild(chip);
+  });
+}
+
+window.resolveState = function() {
+  const sit = SITUATIONS[currentIdx];
+  const overlay = document.getElementById('resolved-overlay');
+  const resolvedImg = document.getElementById('sit-resolved-img');
+  resolvedImg.src = sit.resolved;
+  overlay.classList.add('show');
+  document.getElementById('btn-resolve').style.display = 'none';
+  if (currentIdx < 5) {
+    document.getElementById('btn-next').style.display = 'block';
+  } else {
+    document.getElementById('btn-next').style.display = 'block';
+    document.getElementById('btn-next').textContent = '수업 마무리 →';
+  }
+};
+
+window.nextSituation = function() {
+  if (currentIdx < 5) {
+    loadSituation(currentIdx + 1);
+  } else {
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'flex';
+  }
+};
+
+window.resetCurrent = async function() {
+  const colRef = collection(db, `sessions/current/situation${currentIdx + 1}`);
+  const snap = await getDocs(colRef);
+  const promises = snap.docs.map(d => deleteDoc(d.ref));
+  await Promise.all(promises);
+};
+</script>
+</body>
+</html>
