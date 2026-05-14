@@ -112,8 +112,10 @@
     display: none; background: #0F6E5622;
     border: 2px solid #0F6E56; border-radius: 10px;
     padding: 16px; text-align: center; margin-top: 12px;
+    width: 100%;
   }
-  .resolved-overlay.show { display: block; }
+  .resolved-overlay.show { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .resolved-overlay p { font-size: 1rem; color: #5DCAA5; font-weight: 600; }
 
   #end-screen {
@@ -161,12 +163,12 @@
       <div class="situation-text" id="sit-text">
         쉬는 시간에 한 친구가 다른 친구에게 계속 욕을 하고 있는데, 주변 아이들이 모두 보고만 있다.
       </div>
-      <div class="resolved-overlay" id="resolved-overlay">
-        <p>✨ 용기 있는 행동이 상황을 바꿨어요!</p>
-        <img id="sit-resolved-img" src="situation1_resolved.png" alt="해결된 상황"
-          style="width:100%; border-radius:8px; margin-top:10px;"
-          onerror="this.style.display='none'">
-      </div>
+    </div>
+    <div class="resolved-overlay" id="resolved-overlay">
+      <p>✨ 용기 있는 행동이 상황을 바꿨어요!</p>
+      <img id="sit-resolved-img" src="situation1_resolved.png" alt="해결된 상황"
+        style="width:100%; border-radius:8px; margin-top:10px;"
+        onerror="this.style.display='none'">
     </div>
 
     <div class="result-panel">
