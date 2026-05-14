@@ -255,6 +255,35 @@ const CARDS = [
 
 let currentIdx = 0;
 let unsubscribe = null;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playCardSound() {
+  try {
+    const ctx = getAudioCtx();
+    // 짧고 경쾌한 "탁!" 소리
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    const now = ctx.currentTime;
+
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+
+    gainNode.gain.setValueAtTime(0.4, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch(e) {}
+}
 
 window.startGame = function() {
   document.getElementById('start-screen').style.display = 'none';
@@ -372,6 +401,8 @@ function renderChips(snap) {
       el.style.setProperty('--rot', rot + 'deg');
       el.innerHTML = '<span class="card-emoji-big">' + card.emoji + '</span><span class="card-name-small">' + card.name + '</span>';
       floatArea.appendChild(el);
+      // 카드 붙는 순간 효과음 (딜레이와 동기화)
+      setTimeout(() => playCardSound(), posIdx * 80);
     }
   });
 }
